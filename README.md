@@ -1,1 +1,1 @@
-# Proyecto-semestral-Detecci-n-de-patrones-en-m-ltiples-archivos
+# Proyecto semestral: Detección de patrones en múltiples archivos
