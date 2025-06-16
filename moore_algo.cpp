@@ -1,6 +1,9 @@
 #include "moore_algo.hpp"
 #include <iostream>
 
+
+using namespace std;
+
 void badCharHeuristic(const string& str, int size, int badchar[NO_OF_CHARS]){
   //Inicializar index de carácter para badchar en -1 
   for(int i=0; i<NO_OF_CHARS; i++){
@@ -28,12 +31,12 @@ void mooreSearch(const string& txt, const string& pat){
     }
 
     if(i<0){
-      std::cout << "Patrón en posición: " << shift << std::endl;
+      cout << "Patrón en posición: " << shift << endl;
       //Cambiar posición (shift) del patrón para que alinie el próximo carácter con respecto a la última aparición de éste en el patrón
       shift+= (shift+pat_size<txt_size) ? pat_size - badchar[txt[shift+pat_size]] : 1;
     } else {
 
       //Cambiar posición del patron para que el "bad character" en el texto se alinie con su última aparición en el patrón.
-      shift += std::max(1, i-badchar[txt[shift+i]]);
+      shift += max(1, i-badchar[txt[shift+i]]);
   }
 }
