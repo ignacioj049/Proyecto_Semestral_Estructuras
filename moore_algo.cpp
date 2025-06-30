@@ -1,8 +1,21 @@
 #include "moore_algo.hpp"
 #include <iostream>
 
-
 using namespace std;
+
+vector<int> mapPos2Doc(const string& txt, char separator){
+  vector<int> pos2doc(txt.size());
+  int currDoc = 0;
+  for(int i=0; i<txt.size(); ++i){
+    if(txt[i] == separator){
+      pos2doc[i] = -1;
+      currDoc++;
+    } else {
+      pos2doc[i] = currDoc;
+    }
+  }
+  return pos2doc;
+}
 
 void badCharHeuristic(const string& str, int size, int badchar[NO_OF_CHARS]){
   //Inicializar index de carácter para badchar en -1 
@@ -15,7 +28,8 @@ void badCharHeuristic(const string& str, int size, int badchar[NO_OF_CHARS]){
   }
 }
 
-void mooreSearch(const string& txt, const string& pat){
+set<int> mooreSearchDocs(const string& txt, const string& pat, vector<int> pos2doc){
+  set<int> docs;
   int txt_size = txt.size();
   int pat_size = pat.size();
   int badchar[NO_OF_CHARS];
@@ -23,7 +37,7 @@ void mooreSearch(const string& txt, const string& pat){
   badCharHeuristic(pat, pat_size, badchar);
 
   int shift = 0;
-  while(s<=txt_size-pat_size){
+  while(shift<=txt_size-pat_size){
     int i = pat_size-1;
 
     while(i>=0 && pat[i] == txt[shift+i]){
@@ -31,12 +45,32 @@ void mooreSearch(const string& txt, const string& pat){
     }
 
     if(i<0){
-      cout << "Patrón en posición: " << shift << endl;
+      int doc = pos2doc[shift];
+      if(doc > -1){
+	docs.insert(doc);
+      }
       //Cambiar posición (shift) del patrón para que alinie el próximo carácter con respecto a la última aparición de éste en el patrón
       shift+= (shift+pat_size<txt_size) ? pat_size - badchar[txt[shift+pat_size]] : 1;
     } else {
 
       //Cambiar posición del patron para que el "bad character" en el texto se alinie con su última aparición en el patrón.
       shift += max(1, i-badchar[txt[shift+i]]);
+    }
+  }
+    return docs;
+}
+
+void mooreSearch(const string& txt, const string& pat, char separator){
+  vector<int> pos2doc = mapPos2Doc(txt, separator);
+  set<int> docs = mooreSearchDocs(txt, pat, pos2doc);
+  cout << "Patrón " << pat;
+  if(docs.empty()){
+    cout << " no encontrado" << endl;
+  } else {
+    cout << " encontrado en documentos: ";
+    for(int d : docs){
+      cout << d+1 << " ";
+    }
+    cout << endl;
   }
 }
