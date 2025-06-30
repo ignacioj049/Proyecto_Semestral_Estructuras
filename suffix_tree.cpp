@@ -1,6 +1,8 @@
 // Implementation of Ukkonen's Sufix Tree Construction
 // bibliography: https://www.geeksforgeeks.org/dsa/ukkonens-suffix-tree-construction-part-1/
-// read from part 1 to 6
+//               read from part 1 to 6
+//               https://www.geeksforgeeks.org/dsa/suffix-tree-application-2-searching-all-patterns/
+//               for search patters in a suffix tree
 // by Chloe
 
 // Tree rules
@@ -20,8 +22,11 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
+#include <unordered_set>
+#include <cstring>
 
-#define NO_OF_CHARS 256;
+#define NO_OF_CHARS 256
 
 struct Node{
   Node* children[NO_OF_CHARS];
@@ -44,6 +49,13 @@ Node* activeNode = nullptr; // Tells us where to starts extension.
 int activeEdge = -1;        // Tells us which path to take using a char in the string at activeEdge's value
 int activeLength = 0;       // Length of the active suffix we have walked down activeEdge.
 
+//   Handle multiple documents
+vector<int> pos2doc;
+
+//   Text
+string text;
+int size;
+
 Node* newNode(int start, int* end){
   count++;
   Node* node = new Node;
@@ -61,10 +73,10 @@ int edgeLength(Node* n){
   return *(n->end)-n->start+1;
 }
 
-int walkDown(string txt, Node* current){
+int walkDown(Node* current){
   while(activeLength){
     if(activeLength >= edgeLength(current)){
-      activeEdge = static_cast<int>(txt[activeEdge+edgeLength(current)]) - static_cast<int>(' ');
+      activeEdge = static_cast<int>(text[activeEdge+edgeLength(current)]) - static_cast<int>(' ');
       activeLength -= edgeLength(current);
       activeNode = current;
       return 1;
@@ -74,14 +86,14 @@ int walkDown(string txt, Node* current){
 }
 
 
-void extension(string& txt, Node* root, int pos){
+void extension(Node* root, int pos){
   leafEnd = pos;
   remainingSuffixCount++;
   lastNewNode = nullptr;
 
   while(remainingSuffixCount > 0){
     if(activeLength == 0){
-      activeEdge = static_cast<int>(txt[pos]) - static_cast<int>(' ');
+      activeEdge = static_cast<int>(text[pos]) - static_cast<int>(' ');
     }
     if(activeNode->children[activeEdge] == nullptr){ //if activeNode has no edge starting with activeEdge
       activeNode->children[activeEdge] = newNode(pos, &leafEnd);
@@ -92,10 +104,10 @@ void extension(string& txt, Node* root, int pos){
       }
     } else {
       Node* next = activeNode->children[activeEdge];
-      if(walkDown(txt, next)){
+      if(walkDown(next)){
 	continue;
       }
-      if(text[next->start + activeLength] == txt[pos]){
+      if(text[next->start + activeLength] == text[pos]){
 	if(lastNewNode != nullptr && activeNode != root){
 	  lastNewNode->suffixLink = activeNode;
 	  lastNewNode = nullptr;
@@ -109,7 +121,7 @@ void extension(string& txt, Node* root, int pos){
       Node* split = newNode(next->start, splitEnd);
       activeNode->children[activeEdge] = split;
 
-      split->children[static_cast<int>(txt[pos]) - static_cast<int>(' ')] = newNode(pos,&leafEnd);
+      split->children[static_cast<int>(text[pos]) - static_cast<int>(' ')] = newNode(pos,&leafEnd);
       next->start += activeLength;
       split->children[activeEdge] = next;
 
@@ -121,10 +133,89 @@ void extension(string& txt, Node* root, int pos){
     remainingSuffixCount--;
     if(activeNode == root && activeLength > 0){
       activeLength--;
-      activeEdge = static_cast<int>(txt[pos-remainingSuffixCount + 1]) - static_cast<int>(' ');
+      activeEdge = static_cast<int>(text[pos-remainingSuffixCount + 1]) - static_cast<int>(' ');
     } else if(activeNode != root){
       activeNode = activeNode->suffixLink;
     }
+  }
+}
+
+int traverseEdge(char *str, int idx, int start, int end)
+{
+    int k = 0;
+    //Traverse the edge with character by character matching
+    for(k=start; k<=end && str[idx] != '\0'; k++, idx++)
+    {
+        if(text[k] != str[idx])
+            return -1;  // mo match
+    }
+    if(str[idx] == '\0')
+        return 1;  // match
+    return 0;  // more characters yet to match
+}
+
+Node* doTraversal(Node *n, char* str, int idx){
+    if(n == nullptr){
+        return nullptr; // no match
+    }
+    int res = -1;
+    //If node n is not root node, then traverse edge
+    //from node n's parent to node n.
+    if(n->start != -1)
+    {
+        res = traverseEdge(str, idx, n->start, *(n->end));
+        if(res == -1)  //no match
+            return nullptr;
+        if(res == 1) //match
+        {
+            return n;
+        }
+    }
+    //Get the character index to search
+    idx += edgeLength(n);
+    //If there is an edge from node n going out
+    //with current character str[idx], traverse that edge
+    if(n->children[str[idx]] != NULL)
+        return doTraversal(n->children[str[idx]], str, idx);
+    return nullptr;
+}
+
+void collectDocs(Node* n, unordered_set<int>& docs){
+  if(n==nullptr){
+    return;
+  }
+  if(n->suffixIndex > -1){
+    int pos = n->suffixIndex;
+    if(pos2doc[pos] != -1){
+      docs.insert(pos2doc[pos]);
+    }
+  } else {
+    for(int i=0; i< NO_OF_CHARS; i++){
+      if(n->children[i]!=nullptr){
+	collectDocs(n->children[i],docs);
+      }
+    }
+  }
+}
+
+void checkForSubStringInDocs(Node* root, const string& pattern){
+  Node* match_node = doTraversal(root,pattern.c_string(),0);
+  cout << "Patrón " << pattern;
+  if(!match_node){
+    cout << " no encontrado";
+  }
+  
+  unordered_set<int> docs;
+  collectDocs(match_node, docs);
+
+  if(docs.empty()){
+    cout << " no encontrado";
+  } else {
+    cout << " encontrado en documentos: ";
+    for(int d : docs){
+      cout << d + 1 << " ";
+    }
+    cout << endl;
   }
 }
 
@@ -142,14 +233,48 @@ void freeSuffixTreeByPostOrder(Node* n) {
     delete n;
 }
 
+void setSuffixIndexByDFS(Node* n, int labelHeight) {
+    if (n == nullptr) return;
+
+    int leaf = 1;
+    for (int i = 0; i < NO_OF_CHARS; i++) {
+        if (n->children[i] != nullptr) {
+            if (leaf == 1 && n->start != -1)
+            leaf = 0;
+            setSuffixIndexByDFS(n->children[i], labelHeight + edgeLength(n->children[i]));
+        }
+    }
+    if (leaf == 1) {
+        n->suffixIndex = size - labelHeight;
+    }
+}
+
+void mapPos2Doc(char separator){
+  pos2doc.resize(size);
+  int currDoc = 0;
+  for(int i=0; i<size; ++i){
+    if(text[i] == separator){
+      pos2doc[i] = -1;
+      currDoc++;
+    } else {
+      pos2doc[i] = currDoc;
+    }
+  }
+}
+
+
 Node* buildTree(string& txt){
-  int txt_size = txt.size();
-  rootEnd = new int;
+  text = txt;
+  size = text.size();
+  rootEnd = new int(-1);
   *rootEnd = -1;
   Node* root = newNode(-1,rootEnd);
   activeNode = root;
-  for(int i=0; i<txt_size; i++){
-    extend(text, root, i);
+  for(int i=0; i<size; i++){
+    extension(root, i);
   }
+  int labelHeight = 0;
+  setSuffixIndexByDFS(root,labelHeight);
+  
   return root;
 }
