@@ -1,6 +1,8 @@
 #include "moore_algo.hpp"
 #include <iostream>
-
+#include <set>
+#include <string>
+#include <vector>
 using namespace std;
 
 vector<int> mapPos2Doc(const string& txt, char separator){
@@ -28,7 +30,7 @@ void badCharHeuristic(const string& str, int size, int badchar[NO_OF_CHARS]){
   }
 }
 
-set<int> mooreSearchDocs(const string& txt, const string& pat, vector<int> pos2doc){
+std::set<int> mooreSearchDocs(const std::string& txt, const std::string& pat, const std::vector<int>& pos2doc) {
   set<int> docs;
   int txt_size = txt.size();
   int pat_size = pat.size();
@@ -63,7 +65,7 @@ set<int> mooreSearchDocs(const string& txt, const string& pat, vector<int> pos2d
 void mooreSearch(const string& txt, const string& pat, char separator){
   vector<int> pos2doc = mapPos2Doc(txt, separator);
   set<int> docs = mooreSearchDocs(txt, pat, pos2doc);
-  cout << "Patrón " << pat;
+  /*cout << "Patrón " << pat;
   if(docs.empty()){
     cout << " no encontrado" << endl;
   } else {
@@ -72,5 +74,5 @@ void mooreSearch(const string& txt, const string& pat, char separator){
       cout << d+1 << " ";
     }
     cout << endl;
-  }
+  }*/
 }

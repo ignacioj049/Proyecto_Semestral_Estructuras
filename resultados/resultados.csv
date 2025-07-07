@@ -1,0 +1,3 @@
+Dataset,Algoritmo,NDocs,NPatrones,TipoPatron,TiempoBusqueda(ms),TiempoConstruccion(ms),Memoria(bytes)
+English,BoyerMoore,2,5,existentes,323.868,0,2457
+English,BoyerMoore,2,5,inexistentes,307.647,0,0
